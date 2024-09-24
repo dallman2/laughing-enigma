@@ -1,38 +1,20 @@
 import * as THREE from 'three';
 import { init, getAPI } from './gfx_state';
 
-let {
-  HIGHLIGHT_COLOR,
-  origin,
-  viewerDims,
-  camera,
-  stereoCam,
-  scene,
-  calibrationScene,
-  calibrationMode,
-  captureCalibPair,
-  capturedCalibPairs,
-  calibResults,
-  haveCalibResults,
-  stereoMatcher,
-  scalarMap,
-  raycaster,
-  pointer,
-  intersectedObj,
-  oldColor,
-  raycastExcludeList,
-  worldMap,
-  f,
-  resetState,
-  freeMats,
-} = getAPI();
+type IncExcMap = {
+  inc: THREE.Object3D[];
+  exc: THREE.Object3D[];
+};
+
 /**
  * create the scene for calibration
  * @param {number} rows rows in the chessboard
  * @param {number} cols cols in the chessboard
  * @return {obj<string, array>} an object with two keys, ```inc``` and ```exc```, refering to objects to include and exclude
  */
-function prepareCalibrationScene(rows, cols) {
+function prepareCalibrationScene(rows: number, cols: number) {
+  const { calibrationScene } = getAPI();
+
   const ambLight = new THREE.AmbientLight(0xffffff, 0.5),
     geometry = new THREE.PlaneGeometry(1, 1),
     blackMaterial = new THREE.MeshBasicMaterial({
@@ -63,7 +45,7 @@ function prepareCalibrationScene(rows, cols) {
       exc: [ambLight],
     },
     calibrationScene,
-    calibrationScene.name
+    calibrationScene.name as 'calib' | 'prod'
   );
 }
 
@@ -71,6 +53,8 @@ function prepareCalibrationScene(rows, cols) {
  * @return {obj<string, array>} an object with two keys, ```inc``` and ```exc```, refering to objects to include and exclude
  */
 function generateProps() {
+  const { scene, origin } = getAPI();
+
   const ambLight = new THREE.AmbientLight(0xffffff, 0.3),
     lightGroup = new THREE.Group(),
     light1 = new THREE.PointLight(0xffffff, 0.8),
@@ -79,14 +63,14 @@ function generateProps() {
       0x000000
     ),
     gridHelper = new THREE.GridHelper(10, 10, 0x00ffff, 0xff00ff),
-    geometry = new THREE.BoxBufferGeometry(1, 1, 1);
+    geometry = new THREE.BoxGeometry(1, 1, 1);
 
-  helper.position.set(origin);
+  helper.position.set(origin.x, origin.y, origin.z);
   light1.position.set(1, 1, 1);
   addObjToCollection(
     { inc: [], exc: [helper, light1] },
     lightGroup,
-    scene.name
+    scene.name as 'calib' | 'prod'
   );
   lightGroup.position.set(10, 75, 10);
   gridHelper.position.set(0, -10, 0);
@@ -108,28 +92,18 @@ function generateProps() {
       exc: [gridHelper, ambLight, lightGroup],
     },
     scene,
-    scene.name
+    scene.name as 'calib' | 'prod'
   );
 }
 
 /**
- * @typedef IncExcMap this is an object that contains information necessary to add object to a scene
- * @type {Object}
- * @prop {THREE.Object3D[]} inc - this list is for objects that are to be included in raycasting calculations
- * @prop {THREE.Object3D[]} exc - this list is for objects that are to be excluded in raycasting calculations
- */
-
-/**
- *
  * @param {IncExcMap} objMap the object(s) you want to add to the scene
  * @param {THREE.Scene | THREE.Group} collection which collection should this object be added to?
  * @param {string} sceneKey the scene (either ```calib``` or ```prod```) to associate this collection of objects with
  */
-function addObjToCollection(objMap, collection, sceneKey) {
-  /**
-   * @param {THREE.Object3D} el
-   */
-  let pusher = (el) => {
+function addObjToCollection(objMap: IncExcMap, collection: THREE.Scene | THREE.Group, sceneKey: 'calib' | 'prod') {
+  const { raycastExcludeList, worldMap } = getAPI();
+  const pusher = (el: THREE.Object3D) => {
     worldMap[sceneKey][el.uuid] = el;
     collection.add(el);
   };

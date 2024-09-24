@@ -11,8 +11,8 @@ type StereoImagePair = {
   r: Mat;
 };
 type MapPair = {
-  mat1: Mat;
-  mat2: Mat;
+  map1: Mat;
+  map2: Mat;
 };
 type DistMapsAndQ = {
   l: MapPair;
@@ -54,13 +54,13 @@ class GFXState {
   /** list of captured pairs to be used in calibration*/
   capturedCalibPairs: StereoImagePair[];
   /** an object with the results of stereo calibration */
-  calibResults: DistMapsAndQ | null;
+  calibResults: DistMapsAndQ;
   /** do we have calibration results to show? */
   haveCalibResults: boolean;
   /** stereo bm object */
   stereoMatcher: StereoMatcher;
   /** this class contains mats filled with scalars */
-  scalarMap: ScalarMatMap | null;
+  scalarMap: ScalarMatMap;
   /** used for raycasting, the actual raycaster */
   raycaster: THREE.Raycaster;
   /** used for raycasting, stores the location of the mouse on the canvas */
@@ -77,6 +77,7 @@ class GFXState {
   f: number;
 
   constructor() {
+    console.log('gfxstate constructor', Mat);
     this.HIGHLIGHT_COLOR = 0xff0000;
     this.origin = new THREE.Vector3(0, 0, 0);
     this.viewerDims = {
@@ -90,10 +91,16 @@ class GFXState {
     this.calibrationMode = false;
     this.captureCalibPair = false;
     this.capturedCalibPairs = [];
+    // this.calibResults = {
+    //   l: { map1: new cv.Mat(), map2: new cv.Mat() },
+    //   r: { map1: new cv.Mat(), map2: new cv.Mat() },
+    //   q: new cv.Mat(),
+    // };
+    //@ts-expect-error
     this.calibResults = null;
     this.haveCalibResults = false;
     this.stereoMatcher = new StereoMatcher();
-    this.scalarMap = null;
+    this.scalarMap = new ScalarMatMap();
     this.raycaster = new THREE.Raycaster();
     this.pointer = new THREE.Vector2();
     this.intersectedObj = null;
@@ -121,6 +128,12 @@ class GFXState {
     this.calibrationMode = false;
     this.captureCalibPair = false;
     this.capturedCalibPairs = [];
+    // this.calibResults = {
+    //   l: { map1: new cv.Mat(), map2: new cv.Mat() },
+    //   r: { map1: new cv.Mat(), map2: new cv.Mat() },
+    //   q: new cv.Mat(),
+    // };
+    //@ts-expect-error
     this.calibResults = null;
     this.haveCalibResults = false;
     this.stereoMatcher = new StereoMatcher();

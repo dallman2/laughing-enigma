@@ -1,39 +1,39 @@
 import { Mat, MatVector, TermCriteria } from 'mirada';
-import { init, getAPI } from 'src/js/gfxState';
+import { init, getAPI } from './gfx_state';
 
-let {
-  HIGHLIGHT_COLOR,
-  origin,
-  viewerDims,
-  camera,
-  stereoCam,
-  scene,
-  calibrationScene,
-  calibrationMode,
-  captureCalibPair,
-  capturedCalibPairs,
-  calibResults,
-  haveCalibResults,
-  stereoMatcher,
-  scalarMap,
-  raycaster,
-  pointer,
-  intersectedObj,
-  oldColor,
-  raycastExcludeList,
-  worldMap,
-  f,
-  resetState,
-  freeMats,
-} = getAPI();
 
 /**
  * do a chessboard calibration for each of the stereo cameras.
  * i followed the guide found here pretty closely:
  * https://docs.opencv.org/3.4/dc/dbb/tutorial_py_calibration.html
- */
+*/
 function doStereoCalibration() {
   console.log('calibrating');
+  let {
+    HIGHLIGHT_COLOR,
+    origin,
+    viewerDims,
+    camera,
+    stereoCam,
+    scene,
+    calibrationScene,
+    calibrationMode,
+    captureCalibPair,
+    capturedCalibPairs,
+    calibResults,
+    haveCalibResults,
+    stereoMatcher,
+    scalarMap,
+    raycaster,
+    pointer,
+    intersectedObj,
+    oldColor,
+    raycastExcludeList,
+    worldMap,
+    f,
+    resetState,
+    freeMats,
+  } = getAPI();
   // dont do it if there arent pairs
   if (!capturedCalibPairs.length) return;
 
@@ -48,7 +48,7 @@ function doStereoCalibration() {
    * @param {MatVector} imgPoints other part of parallel array, stores the distorted grid
    * @param {TermCriteria} crit term critera for finding subpixel corners
    */
-  function singleImageCalib(img, r, c, prePoints, objPoints, imgPoints, crit) {
+  function singleImageCalib(img: Mat, r: number, c: number, prePoints: Mat, objPoints: MatVector, imgPoints: MatVector, crit: TermCriteria) {
     let gray = new cv.Mat(img.size(), cv.CV_8UC1),
       corners = new cv.Mat(new cv.Size(r * c, 2), cv.CV_32F);
     cv.cvtColor(img, gray, cv.COLOR_BGR2GRAY);
@@ -73,16 +73,17 @@ function doStereoCalibration() {
     cols = 7,
     dims = 3,
     tc = new cv.TermCriteria(
-      cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER,
+      cv.TermCriteria_EPS + cv.TermCriteria_MAX_ITER,
       30,
       0.001
     );
 
   let imgPointsL = new cv.MatVector(),
     imgPointsR = new cv.MatVector(),
-    objPointsL = new cv.MatVector(),
+    objPointsL: MatVector = new cv.MatVector(),
     objPointsR = new cv.MatVector();
-  /** the prefab matrix which yields the same output as
+  /** 
+   * the prefab matrix which yields the same output as
    * ```
    * objp = np.zeros((6*7,3), np.float32)
    * objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
@@ -230,10 +231,11 @@ function doStereoCalibration() {
       map2: map2R,
     };
     calibResults['q'] = q;
-    haveCalibResults.value = true;
+    haveCalibResults = true;
 
     // some mats are trapped in vectors, so push all their refs into a list
     let matList = [];
+    // @ts-expect-error this is really a vector of mats, but the typescript defs seem to alias `MatVector` to `Mat`
     for (let i = 0; i < objPointsL.size(); i++)
       matList.push(
         imgPointsL.get(i),
@@ -242,9 +244,8 @@ function doStereoCalibration() {
         objPointsR.get(i)
       );
     freeMats(
-      ...capturedCalibPairs.reduce((prev, cur, idx) =>
-        idx == 1 ? [prev.l, prev.r, cur.l, cur.r] : [...prev, cur.l, cur.r]
-      ), // this unnests the images from the captured img pairs list
+      // this unnests the images from the captured img pairs list
+      ...capturedCalibPairs.reduce((acc, el, idx) => { acc.push(el.l, el.r); return acc }, [] as Mat[]),
       prefabbedPoints,
       camMatL,
       newCamMatL,
