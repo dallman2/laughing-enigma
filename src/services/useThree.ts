@@ -5,12 +5,11 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { doStereoCalibration } from '../lib/stereoCalibration';
 import { doStereoVis } from '../lib/stereoVision';
 import { prepareCalibrationScene, generateProps } from '../lib/sceneCreation';
-import opencv from '../lib/opencv_js.js';
 import { init, getAPI } from '../lib/gfx_state';
 
-import { type CV } from 'mirada';
 
 console.log('calling getapi');
+init();
 let {
     HIGHLIGHT_COLOR,
     origin,
@@ -148,10 +147,9 @@ function gfxSetup(el: HTMLCanvasElement, stereoEl: HTMLCanvasElement) {
 
 /**
  * calls the setup method, preps the render function,
- * and attaches the render loop to the resolution of the
- * opencv promise
+ * and attaches the render loop
  */
-function attachAndRender(el: HTMLCanvasElement, stereoEl: HTMLCanvasElement, leftOut: HTMLCanvasElement, rightOut: HTMLCanvasElement, dispMapEl: HTMLCanvasElement, signalCvReady: () => void) {
+function attachAndRender(el: HTMLCanvasElement, stereoEl: HTMLCanvasElement, leftOut: HTMLCanvasElement, rightOut: HTMLCanvasElement, dispMapEl: HTMLCanvasElement) {
     let { renderer, stereoRenderer } = gfxSetup(el, stereoEl);
 
     /**
@@ -199,13 +197,21 @@ function attachAndRender(el: HTMLCanvasElement, stereoEl: HTMLCanvasElement, lef
         // f = window.requestAnimationFrame(render, renderer.domElement);
         f = window.requestAnimationFrame(render);
     }
-    // call the render loop as a promise fulfillment because this module is lorg
-    opencv().then((val: CV) => {
-        // @ts-ignore we are setting the cv object here... typescript is not happy
-        cv = val;
-        signalCvReady();
-        render();
-    });
+
+    render();
+
+
+    // // call the render loop as a promise fulfillment because this module is lorg
+    // //@ts-expect-error
+    // opencv().then((val: CV) => {
+    //     console.log('opencv ready');
+    //     // @ts-expect-error we are setting the cv object here... typescript is not happy
+    //     cv = val;
+    //     signalCvReady();
+    //     render();
+    //     console.log('render loop started');
+    // });
+    // ^^^ this is the original code, but we are going to use the opencv promise in the main app
 }
 
 export default function useThree() {

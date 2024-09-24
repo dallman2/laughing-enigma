@@ -1,26 +1,38 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import useThree from "./services/useThree";
+import opencv from "./lib/opencv_js.js";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+import { type CV } from "mirada";
+import ThreeImpl from "./ThreeImpl/ThreeImpl.js";
+
+const App = () => {
+  console.log("loading opencv");
+
+  if (!cv) {
+    throw new Promise<void>((resolve) => {
+      // call the render loop as a promise fulfillment because this module is lorg
+      // @ts-expect-error
+      opencv().then((val: CV) => {
+        console.log("opencv ready");
+        // @ts-expect-error we are setting the cv object here... typescript is not happy
+        cv = val;
+        resolve();
+      });
+    });
+  }
+
+  console.log("calling app");
+  const {
+    attachAndRender,
+    toggleCalibrationMode,
+    captureCalibrationPair,
+    doStereoCalibration,
+  } = useThree();
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
@@ -28,8 +40,9 @@ function App() {
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
+      <ThreeImpl />
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;

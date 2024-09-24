@@ -1,31 +1,6 @@
-import Timer from 'src/js/Timer';
-import { init, getAPI } from 'src/js/gfxState';
+import Timer from './Timer';
+import { init, getAPI } from './gfx_state';
 
-let {
-  HIGHLIGHT_COLOR,
-  origin,
-  viewerDims,
-  camera,
-  stereoCam,
-  scene,
-  calibrationScene,
-  calibrationMode,
-  captureCalibPair,
-  capturedCalibPairs,
-  calibResults,
-  haveCalibResults,
-  stereoMatcher,
-  scalarMap,
-  raycaster,
-  pointer,
-  intersectedObj,
-  oldColor,
-  raycastExcludeList,
-  worldMap,
-  f,
-  resetState,
-  freeMats,
-} = getAPI();
 
 /**
  * do the thing, ya know?
@@ -37,12 +12,42 @@ let {
  * @param {HTMLCanvasElement} leftOut
  * @param {HTMLCanvasElement} rightOut
  * @param {HTMLCanvasElement} dispMapEl
- */
-function doStereoVis(stereoCamDomEl, leftOut, rightOut, dispMapEl) {
+*/
+function doStereoVis(stereoCamDomEl: HTMLCanvasElement, leftOut: HTMLCanvasElement, rightOut: HTMLCanvasElement, dispMapEl: HTMLCanvasElement) {
+  let {
+    HIGHLIGHT_COLOR,
+    origin,
+    viewerDims,
+    camera,
+    stereoCam,
+    scene,
+    calibrationScene,
+    calibrationMode,
+    captureCalibPair,
+    capturedCalibPairs,
+    calibResults,
+    haveCalibResults,
+    stereoMatcher,
+    scalarMap,
+    raycaster,
+    pointer,
+    intersectedObj,
+    oldColor,
+    raycastExcludeList,
+    worldMap,
+    f,
+    resetState,
+    freeMats,
+  } = getAPI();
+
   let gl = stereoCamDomEl.getContext('webgl2');
+  if (!gl) {
+    console.error('no gl context');
+    return;
+  }
   const pixels = new Uint8Array(
-      gl.drawingBufferHeight * gl.drawingBufferWidth * 4
-    ),
+    gl.drawingBufferHeight * gl.drawingBufferWidth * 4
+  ),
     h = gl.drawingBufferHeight,
     w = gl.drawingBufferWidth,
     t = new Timer();
@@ -60,15 +65,16 @@ function doStereoVis(stereoCamDomEl, leftOut, rightOut, dispMapEl) {
 
   // the user has issued a command to capture a stereo image pair
   let del = true;
-  if (calibrationMode.value && captureCalibPair.value) {
+  if (calibrationMode && captureCalibPair) {
     capturedCalibPairs.push({ l: leftEye, r: rightEye });
-    captureCalibPair.value = false;
+    captureCalibPair = false;
     del = false;
   }
 
   // if we have loaded in or found a mapping
-  if (haveCalibResults.value) {
+  if (haveCalibResults) {
     if (!stereoMatcher.stereoBM) {
+      //@ts-expect-error stereoBM is a mystery
       stereoMatcher.setBM(new cv.StereoBM());
     }
     let undistL = new cv.Mat(),
