@@ -9,29 +9,10 @@ import { init, getAPI } from './gfx_state';
 */
 function doStereoCalibration() {
   console.log('calibrating');
-  let {
-    HIGHLIGHT_COLOR,
-    origin,
-    viewerDims,
-    camera,
-    stereoCam,
-    scene,
-    calibrationScene,
-    calibrationMode,
-    captureCalibPair,
+  const {
+    setHaveCalibResults,
     capturedCalibPairs,
-    calibResults,
-    haveCalibResults,
-    stereoMatcher,
-    scalarMap,
-    raycaster,
-    pointer,
-    intersectedObj,
-    oldColor,
-    raycastExcludeList,
-    worldMap,
-    f,
-    resetState,
+    setCalibResults,
     freeMats,
   } = getAPI();
   // dont do it if there arent pairs
@@ -222,16 +203,19 @@ function doStereoCalibration() {
       map2R
     );
 
-    calibResults['l'] = {
-      map1: map1L,
-      map2: map2L,
-    };
-    calibResults['r'] = {
-      map1: map1R,
-      map2: map2R,
-    };
-    calibResults['q'] = q;
-    haveCalibResults = true;
+    const calibResults = {
+      l: {
+        map1: map1L,
+        map2: map2L,
+      },
+      r: {
+        map1: map1R,
+        map2: map2R,
+      },
+      q
+    }
+    setCalibResults(calibResults);
+    setHaveCalibResults(true);
 
     // some mats are trapped in vectors, so push all their refs into a list
     let matList = [];

@@ -1,0 +1,36 @@
+.px-1 {
+  padding-inline: 0.5rem;
+}
+.py-1 {
+  padding-block: 0.5rem;
+}
+.mx-1 {
+  margin-inline: 0.5rem;
+}
+.my-1 {
+  margin-block: 0.5rem;
+}
+.px-2 {
+  padding-inline: 1rem;
+}
+.py-2 {
+  padding-block: 1rem;
+}
+.mx-2 {
+  margin-inline: 1rem;
+}
+.my-2 {
+  margin-block: 1rem;
+}
+.px-3 {
+  padding-inline: 2rem;
+}
+.py-3 {
+  padding-block: 2rem;
+}
+.mx-3 {
+  margin-inline: 2rem;
+}
+.my-3 {
+  margin-block: 2rem;
+}

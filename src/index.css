@@ -13,36 +13,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.row {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.align-center {
-  align-items: center;
-}
-
-.justify-end {
-  justify-content: flex-end;
-}
-
-.align-end {
-  align-items: flex-end;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
-
-.justify-around {
-  justify-content: space-around;
-}
-
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
