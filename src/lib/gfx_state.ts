@@ -77,7 +77,7 @@ class GFXState {
   f: number;
 
   constructor() {
-    console.log('gfxstate constructor', Mat);
+    console.log('gfxstate constructor');
     this.HIGHLIGHT_COLOR = 0xff0000;
     this.origin = new THREE.Vector3(0, 0, 0);
     this.viewerDims = {
@@ -121,6 +121,9 @@ class GFXState {
    * duplicate items and cause all sorts of issues if everything is not in the original state
    */
   resetState() {
+    this.freeMats(this.capturedCalibPairs.map((pair) => pair.l).concat(this.capturedCalibPairs.map((pair) => pair.r)));
+    if (this.haveCalibResults) this.freeMats([this.calibResults.l.map1, this.calibResults.l.map2, this.calibResults.r.map1, this.calibResults.r.map2, this.calibResults.q]);
+
     this.camera = new THREE.PerspectiveCamera();
     this.stereoCam = new THREE.StereoCamera();
     this.scene = new THREE.Scene();
@@ -189,6 +192,26 @@ class GFXState {
       f: this.f,
       resetState: () => this.resetState(),
       freeMats: (...mats: Mat[]) => this.freeMats(mats),
+
+      setCamera: (val: THREE.PerspectiveCamera) => (this.camera = val),
+      setStereoCamera: (val: THREE.StereoCamera) => (this.stereoCam = val),
+      setFrameCounter: (val: number) => (this.f = val),
+      setCalibrationMode: (val: boolean) => (this.calibrationMode = val),
+      setCaptureCalibPair: (val: boolean) => (this.captureCalibPair = val),
+      setIntersectedObj: (val: THREE.Mesh<any, THREE.MeshLambertMaterial> | null) => (this.intersectedObj = val),
+      setHaveCalibResults: (val: boolean) => (this.haveCalibResults = val),
+      setCalibResults: (val: DistMapsAndQ) => (this.calibResults = val),
+      revertIntersectedObjColor: () => {
+        if (this.intersectedObj !== null) {
+          this.intersectedObj.material.emissive.setHex(this.oldColor);
+        }
+      },
+      handleIntersectionUpdate: () => {
+        if (this.intersectedObj !== null) {
+          this.oldColor = this.intersectedObj.material.emissive.getHex()
+          this.intersectedObj.material.emissive.setHex(this.HIGHLIGHT_COLOR)
+        }
+      }
     };
   }
 }
@@ -197,7 +220,8 @@ class GFXState {
  */
 function init() {
   console.log('gfxstate init');
-  if (!classInstance) classInstance = new GFXState();
+  if (classInstance) console.log('gfxstate already initialized?');
+  else classInstance = new GFXState();
 }
 /**
  * the singleton instances properties as a callable function

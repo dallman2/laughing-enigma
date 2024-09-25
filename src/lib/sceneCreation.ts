@@ -15,7 +15,7 @@ type IncExcMap = {
 function prepareCalibrationScene(rows: number, cols: number) {
   const { calibrationScene } = getAPI();
 
-  const ambLight = new THREE.AmbientLight(0xffffff, 0.5),
+  const ambLight = new THREE.AmbientLight(0xffffff, 0.3),
     geometry = new THREE.PlaneGeometry(1, 1),
     blackMaterial = new THREE.MeshBasicMaterial({
       color: 0x000000,
@@ -110,6 +110,8 @@ function addObjToCollection(objMap: IncExcMap, collection: THREE.Scene | THREE.G
   objMap.exc.forEach((el) => raycastExcludeList.push(el.id));
   objMap.exc.forEach(pusher);
   objMap.inc.forEach(pusher);
+
+  console.log('worldMap', worldMap);
 }
 
 export { generateProps, prepareCalibrationScene };

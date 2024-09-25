@@ -1,5 +1,6 @@
 import React from "react";
 import "./ThreeImpl.css";
+import useThree from "../services/useThree";
 
 const ThreeImpl = () => {
   const threeContainer = React.useRef<HTMLDivElement>(null);
@@ -8,28 +9,73 @@ const ThreeImpl = () => {
   const rightEye = React.useRef<HTMLCanvasElement>(null);
   const dispMap = React.useRef<HTMLCanvasElement>(null);
 
+  const [calibMode, setCalibMode] = React.useState(false);
+  const [capturedPairs, setCapturedPairs] = React.useState(0);
+
+  const {
+    attachAndRender,
+    toggleCalibrationMode,
+    captureCalibrationPair,
+    doStereoCalibration,
+  } = useThree();
+
+  React.useEffect(() => {
+    if (
+      threeContainer.current &&
+      threeStereoContainer.current &&
+      leftEye.current &&
+      rightEye.current &&
+      dispMap.current
+    ) {
+      console.log("attaching and rendering");
+      attachAndRender(
+        threeContainer.current,
+        threeStereoContainer.current,
+        leftEye.current,
+        rightEye.current,
+        dispMap.current
+      );
+
+      // return () => {
+      //   setRendered(false);
+      // };
+    }
+  }, [
+    threeContainer,
+    threeStereoContainer,
+    leftEye,
+    rightEye,
+    dispMap,
+    attachAndRender,
+  ]);
+
   const handleCalibModeToggle = () => {
-    calibMode = toggleCalibrationMode();
+    setCalibMode(toggleCalibrationMode());
   };
   const handleCapturePair = () => {
-    capturedPairs = captureCalibrationPair();
+    setCapturedPairs(captureCalibrationPair());
   };
   const handleStereoCalib = () => {
-    doStereoCalibration;
+    doStereoCalibration();
   };
   return (
     <div>
-      <div className="row justify-center align-center">
-        <button onClick={handleCalibModeToggle}>
+      <div className="row justify-center align-center my-2">
+        <button className="mx-1 py-1 px-2" onClick={handleCalibModeToggle}>
           Toggle Chessboard/ Normal mode
         </button>
-        <button onClick={handleCapturePair}>Capture calibration pair</button>
-        <button onClick={handleStereoCalib}>Calibrate Cameras</button>
-        {/* <q-chip
-                    v-if="calibMode"
-                    square:label="`Pairs captured: ${capturedPairs}`"
-                /> */}
+        <button className="mx-1 py-1 px-2" onClick={handleCapturePair}>
+          Capture calibration pair
+        </button>
+        <button className="mx-1 py-1 px-2" onClick={handleStereoCalib}>
+          Calibrate Cameras
+        </button>
       </div>
+      {calibMode && (
+        <div className="row justify-center align-center">
+          <h5>Calibration pairs captured: {capturedPairs}</h5>
+        </div>
+      )}
       <div className="row justify-center align-center">The single cam view</div>
       <div
         className="row justify-center align-center"

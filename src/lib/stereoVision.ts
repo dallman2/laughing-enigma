@@ -14,14 +14,7 @@ import { init, getAPI } from './gfx_state';
  * @param {HTMLCanvasElement} dispMapEl
 */
 function doStereoVis(stereoCamDomEl: HTMLCanvasElement, leftOut: HTMLCanvasElement, rightOut: HTMLCanvasElement, dispMapEl: HTMLCanvasElement) {
-  let {
-    HIGHLIGHT_COLOR,
-    origin,
-    viewerDims,
-    camera,
-    stereoCam,
-    scene,
-    calibrationScene,
+  const {
     calibrationMode,
     captureCalibPair,
     capturedCalibPairs,
@@ -29,14 +22,7 @@ function doStereoVis(stereoCamDomEl: HTMLCanvasElement, leftOut: HTMLCanvasEleme
     haveCalibResults,
     stereoMatcher,
     scalarMap,
-    raycaster,
-    pointer,
-    intersectedObj,
-    oldColor,
-    raycastExcludeList,
-    worldMap,
-    f,
-    resetState,
+    setCaptureCalibPair,
     freeMats,
   } = getAPI();
 
@@ -67,7 +53,7 @@ function doStereoVis(stereoCamDomEl: HTMLCanvasElement, leftOut: HTMLCanvasEleme
   let del = true;
   if (calibrationMode && captureCalibPair) {
     capturedCalibPairs.push({ l: leftEye, r: rightEye });
-    captureCalibPair = false;
+    setCaptureCalibPair(false);
     del = false;
   }
 
