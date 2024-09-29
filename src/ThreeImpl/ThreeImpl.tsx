@@ -2,6 +2,37 @@ import React from "react";
 import "./ThreeImpl.css";
 import useThree from "../services/useThree";
 import { setSuppressTimer } from "../lib/Timer";
+import {
+  INITIAL_EYE_SEP,
+  INITIAL_STEREO_HEIGHT,
+  INITIAL_STEREO_WIDTH,
+} from "../lib/constants";
+
+const defaultConfig = {
+  eyeSep: INITIAL_EYE_SEP,
+  stereoWidth: INITIAL_STEREO_WIDTH,
+  stereoHeight: INITIAL_STEREO_HEIGHT,
+};
+
+const canvasStyle = {
+  border: "solid 1px black",
+  width: INITIAL_STEREO_WIDTH,
+  height: INITIAL_STEREO_HEIGHT,
+};
+
+export type ConfigType = typeof defaultConfig;
+
+const checkConfig = (config: ConfigType) => {
+  if (config.eyeSep <= 0) {
+    throw new Error("Eye separation must be greater than 0");
+  }
+  if (config.stereoWidth <= 0) {
+    throw new Error("Stereo width must be greater than 0");
+  }
+  if (config.stereoHeight <= 0) {
+    throw new Error("Stereo height must be greater than 0");
+  }
+};
 
 const ThreeImpl = () => {
   const threeContainer = React.useRef<HTMLDivElement>(null);
@@ -14,6 +45,7 @@ const ThreeImpl = () => {
   const [calibMode, setCalibMode] = React.useState(false);
   const [localSuppressTimer, setLocalSuppressTimer] = React.useState(false);
   const [capturedPairs, setCapturedPairs] = React.useState(0);
+  const [config, setConfig] = React.useState(defaultConfig);
 
   const {
     attachAndRender,
@@ -25,23 +57,29 @@ const ThreeImpl = () => {
   } = useThree();
 
   React.useEffect(() => {
-    if (
-      threeContainer.current &&
-      threeStereoContainer.current &&
-      leftEye.current &&
-      rightEye.current &&
-      dispMap.current &&
-      reprojectMap.current
-    ) {
-      console.log("attaching and rendering");
-      attachAndRender(
-        threeContainer.current,
-        threeStereoContainer.current,
-        leftEye.current,
-        rightEye.current,
-        dispMap.current,
+    try {
+      checkConfig(config);
+      if (
+        threeContainer.current &&
+        threeStereoContainer.current &&
+        leftEye.current &&
+        rightEye.current &&
+        dispMap.current &&
         reprojectMap.current
-      );
+      ) {
+        console.log("attaching and rendering");
+        attachAndRender(
+          threeContainer.current,
+          threeStereoContainer.current,
+          leftEye.current,
+          rightEye.current,
+          dispMap.current,
+          reprojectMap.current,
+          config
+        );
+      }
+    } catch (e) {
+      console.error("error in effect", { e });
     }
   }, [
     threeContainer,
@@ -49,6 +87,7 @@ const ThreeImpl = () => {
     leftEye,
     rightEye,
     dispMap,
+    config,
     attachAndRender,
   ]);
 
@@ -69,6 +108,14 @@ const ThreeImpl = () => {
       distMapsAndQ: getStereoCalibrationResults(),
     });
   };
+  const bindConfigChangeHandler =
+    (target: keyof typeof config): React.ChangeEventHandler<HTMLInputElement> =>
+    (e) =>
+      setConfig((oldState) => ({
+        ...oldState,
+        [target]: parseFloat(e.target.value),
+      }));
+
   return (
     <div>
       <div className="row justify-between align-center my-2">
@@ -97,6 +144,36 @@ const ThreeImpl = () => {
           </div>
         )}
       </div>
+      <div className="row justify-around align-center px-3">
+        <label>
+          Eye separation:
+          <input
+            className="mx-3 px-1"
+            step={0.01}
+            type="number"
+            value={config.eyeSep}
+            onChange={bindConfigChangeHandler("eyeSep")}
+          />
+        </label>
+        <label>
+          Stereo viewer dimensions (per eye width):
+          <input
+            className="mx-3 px-1"
+            type="number"
+            value={config.stereoWidth}
+            onChange={bindConfigChangeHandler("stereoWidth")}
+          />
+        </label>
+        <label>
+          Stereo viewer dimensions (per eye height):
+          <input
+            className="mx-3 px-1"
+            type="number"
+            value={config.stereoHeight}
+            onChange={bindConfigChangeHandler("stereoHeight")}
+          />
+        </label>
+      </div>
       <div className="row justify-center align-center">The single cam view</div>
       <div
         className="row justify-center align-center"
@@ -111,17 +188,17 @@ const ThreeImpl = () => {
         <div>Undistorted Left Eye View</div>
         <div>Undistorted Right Eye View</div>
       </div>
-      <div className="row justify-around align-center ">
+      <div className="row justify-around align-center">
         <canvas
-          style={{ border: "solid 1px black" }}
-          width="640"
-          height="360"
+          style={canvasStyle}
+          width={config.stereoWidth}
+          height={config.stereoHeight}
           ref={leftEye}
         />
         <canvas
-          style={{ border: "solid 1px black" }}
-          width="640"
-          height="360"
+          style={canvasStyle}
+          width={config.stereoWidth}
+          height={config.stereoHeight}
           ref={rightEye}
         />
       </div>
@@ -131,15 +208,15 @@ const ThreeImpl = () => {
       </div>
       <div className="row justify-around align-center ">
         <canvas
-          style={{ border: "solid 1px black" }}
-          width="640"
-          height="360"
+          style={canvasStyle}
+          width={config.stereoWidth}
+          height={config.stereoHeight}
           ref={dispMap}
         />
         <canvas
-          style={{ border: "solid 1px black" }}
-          width="640"
-          height="360"
+          style={canvasStyle}
+          width={config.stereoWidth}
+          height={config.stereoHeight}
           ref={reprojectMap}
         />
       </div>
