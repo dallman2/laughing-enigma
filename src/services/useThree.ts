@@ -50,7 +50,7 @@ function checkIntersections() {
   const { raycaster, pointer, scene, camera, raycastExcludeList, intersectedObj, oldColor, setIntersectedObj, handleIntersectionUpdate, revertIntersectedObjColor } = getAPI();
   // update the picking ray with the camera and pointer position
   raycaster.setFromCamera(pointer, camera);
-  const intersects = raycaster.intersectObjects<THREE.Mesh<any, THREE.MeshLambertMaterial>>(scene.children, false);
+  const intersects = raycaster.intersectObjects<THREE.Mesh<THREE.BufferGeometry, THREE.MeshLambertMaterial>>(scene.children, false);
   //are there objects in the intersection list and are they NOT excluded?
   if (
     intersects.length > 0 &&
@@ -91,7 +91,7 @@ const movePointerHandler = (ev: PointerEvent) => {
   pointer.x = (ev.offsetX / (INITIAL_STEREO_WIDTH * 2)) * 2 - 1;
 }
 
-const clickHandler = (_: MouseEvent) => {
+const clickHandler = () => {
   const { intersectedObj } = getAPI();
   if (intersectedObj?.type == 'Mesh') console.log(intersectedObj.uuid);
 }

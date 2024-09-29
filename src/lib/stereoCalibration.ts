@@ -11,9 +11,8 @@ import { getAPI } from './gfx_state';
  * @param {MatVector} objPoints part of parallel array, stores the grid
  * @param {MatVector} imgPoints other part of parallel array, stores the distorted grid
  * @param {TermCriteria} crit term critera for finding subpixel corners
- * @param {number} idx index of the image in the capturedCalibPairs array
  */
-function singleImageCalib(img: Mat, r: number, c: number, prePoints: Mat, objPoints: MatVector, imgPoints: MatVector, crit: TermCriteria, idx: number) {
+function singleImageCalib(img: Mat, r: number, c: number, prePoints: Mat, objPoints: MatVector, imgPoints: MatVector, crit: TermCriteria) {
   const { freeMats } = getAPI();
   const gray = new cv.Mat(img.size(), cv.CV_8UC1),
     corners = new cv.Mat(new cv.Size(r * c, 2), cv.CV_32F);
@@ -117,7 +116,7 @@ function doStereoCalibration() {
     }
   }
 
-  capturedCalibPairs.forEach(({ l, r }, idx) => {
+  capturedCalibPairs.forEach(({ l, r }) => {
     singleImageCalib(
       l,
       rows,
@@ -126,7 +125,6 @@ function doStereoCalibration() {
       objPointsL,
       imgPointsL,
       tc,
-      idx
     );
     singleImageCalib(
       r,
@@ -136,7 +134,6 @@ function doStereoCalibration() {
       objPointsR,
       imgPointsR,
       tc,
-      idx
     );
   });
   console.log(`captured ${capturedCalibPairs.length} calibration pairs. results from left camera: ${imgPointsL.size()}, from right camera: ${imgPointsR.size()}`);
@@ -237,7 +234,7 @@ function doStereoCalibration() {
     setHaveCalibResults(true);
 
     // some mats are trapped in vectors, so push all their refs into a list
-    let matList = [];
+    const matList = [];
     // @ts-expect-error this is really a vector of mats, but the typescript defs seem to alias `MatVector` to `Mat`
     for (let i = 0; i < objPointsL.size(); i++)
       matList.push(
