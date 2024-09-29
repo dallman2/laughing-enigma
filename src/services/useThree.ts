@@ -140,7 +140,7 @@ function gfxSetup(el: HTMLDivElement, stereoEl: HTMLDivElement) {
  * calls the setup method, preps the render function,
  * and attaches the render loop
  */
-function attachAndRender(el: HTMLDivElement, stereoEl: HTMLDivElement, leftOut: HTMLCanvasElement, rightOut: HTMLCanvasElement, dispMapEl: HTMLCanvasElement) {
+function attachAndRender(el: HTMLDivElement, stereoEl: HTMLDivElement, leftOut: HTMLCanvasElement, rightOut: HTMLCanvasElement, dispMapEl: HTMLCanvasElement, reprojectMapEl: HTMLCanvasElement) {
   const { scene, calibrationScene } = getAPI();
   const { renderer, stereoRenderer } = gfxSetup(el, stereoEl);
   console.log('gfx setup complete');
@@ -185,7 +185,7 @@ function attachAndRender(el: HTMLDivElement, stereoEl: HTMLDivElement, leftOut: 
     // every fourth frame, do stereovis
     if (f % 4 == 0) {
       try {
-        doStereoVis(stereoRenderer.domElement, leftOut, rightOut, dispMapEl);
+        doStereoVis(stereoRenderer.domElement, leftOut, rightOut, dispMapEl, reprojectMapEl);
       } catch (e) {
         console.log('fug', e);
       }
@@ -216,5 +216,7 @@ export default function useThree() {
     toggleCalibrationMode,
     captureCalibrationPair,
     doStereoCalibration,
+    getStereoCalibrationResults: () => getAPI().calibResults,
+    haveCalibResults: getAPI().haveCalibResults,
   };
 }

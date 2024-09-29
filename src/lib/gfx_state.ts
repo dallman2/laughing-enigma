@@ -164,6 +164,7 @@ class GFXState {
   freeMats(mats: Mat[]) {
     for (const mat of mats) {
       mat.delete();
+      // mat.release();
     }
   }
 

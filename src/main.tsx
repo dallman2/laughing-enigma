@@ -8,7 +8,9 @@ import "./styles/spacing.css";
 import "./styles/tag-boilerplate.css";
 
 createRoot(document.getElementById("root")!).render(
-  <Suspense fallback={<Loading />}>
-    <App />
-  </Suspense>
+  <StrictMode>
+    <Suspense fallback={<Loading />}>
+      <App />
+    </Suspense>
+  </StrictMode>
 );
