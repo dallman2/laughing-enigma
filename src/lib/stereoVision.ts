@@ -1,5 +1,5 @@
 import Timer from './Timer';
-import { init, getAPI } from './gfx_state';
+import { getAPI } from './gfx_state';
 
 
 /**
@@ -8,12 +8,8 @@ import { init, getAPI } from './gfx_state';
  * https://learnopencv.com/depth-perception-using-stereo-camera-python-c/#block-matching-for-dense-stereo-correspondence
  * as well as
  * https://docs.opencv.org/3.4/dc/dbb/tutorial_py_calibration.html
- * @param {HTMLCanvasElement} stereoCamDomEl
- * @param {HTMLCanvasElement} leftOut
- * @param {HTMLCanvasElement} rightOut
- * @param {HTMLCanvasElement} dispMapEl
 */
-function doStereoVis(stereoCamDomEl: HTMLCanvasElement, leftOut: HTMLCanvasElement, rightOut: HTMLCanvasElement, dispMapEl: HTMLCanvasElement) {
+function doStereoVis(stereoCamDomEl: HTMLCanvasElement, leftOut: HTMLCanvasElement, rightOut: HTMLCanvasElement, dispMapEl: HTMLCanvasElement, reprojectMapEl: HTMLCanvasElement) {
   const {
     calibrationMode,
     captureCalibPair,
@@ -38,6 +34,7 @@ function doStereoVis(stereoCamDomEl: HTMLCanvasElement, leftOut: HTMLCanvasEleme
     w = gl.drawingBufferWidth,
     t = new Timer();
 
+  t.start('stereo vis');
   // get image from stereo canvas
   gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
   // create a mat for the flipped version of the image
@@ -63,7 +60,7 @@ function doStereoVis(stereoCamDomEl: HTMLCanvasElement, leftOut: HTMLCanvasEleme
       //@ts-expect-error stereoBM is a mystery
       stereoMatcher.setBM(new cv.StereoBM());
     }
-    let undistL = new cv.Mat(),
+    const undistL = new cv.Mat(),
       undistR = new cv.Mat(),
       grayL = new cv.Mat(),
       grayR = new cv.Mat(),
@@ -120,7 +117,12 @@ function doStereoVis(stereoCamDomEl: HTMLCanvasElement, leftOut: HTMLCanvasEleme
       dispMapConv
     );
 
+    const pointCloudOutImg = new cv.Mat(dispMapConv.size(), cv.CV_32FC3);
+
+    cv.reprojectImageTo3D(dispMapConv, pointCloudOutImg, calibResults.q, true);
+
     cv.imshow(dispMapEl, dispMapConv);
+    cv.imshow(reprojectMapEl, pointCloudOutImg);
     // clean up
     freeMats(undistL, undistR, grayL, grayR, dispMap, dispMapConv);
   } else {
@@ -132,6 +134,7 @@ function doStereoVis(stereoCamDomEl: HTMLCanvasElement, leftOut: HTMLCanvasEleme
   if (del) {
     freeMats(leftEye, rightEye);
   }
+  t.finish();
 }
 
 export { doStereoVis };

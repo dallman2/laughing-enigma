@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { init, getAPI } from './gfx_state';
+import { getAPI } from './gfx_state';
 
 type IncExcMap = {
   inc: THREE.Object3D[];
@@ -10,7 +10,6 @@ type IncExcMap = {
  * create the scene for calibration
  * @param {number} rows rows in the chessboard
  * @param {number} cols cols in the chessboard
- * @return {obj<string, array>} an object with two keys, ```inc``` and ```exc```, refering to objects to include and exclude
  */
 function prepareCalibrationScene(rows: number, cols: number) {
   const { calibrationScene } = getAPI();
@@ -30,10 +29,7 @@ function prepareCalibrationScene(rows: number, cols: number) {
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
       // every other square should be white
-      let square;
-      if ((i % 2 && j % 2) || (!(i % 2) && !(j % 2)))
-        square = new THREE.Mesh(geometry, blackMaterial);
-      else square = new THREE.Mesh(geometry, whiteMaterial);
+      const square = ((i % 2 && j % 2) || (!(i % 2) && !(j % 2))) ? new THREE.Mesh(geometry, blackMaterial) : new THREE.Mesh(geometry, whiteMaterial);
       square.position.set(i - cols / 2, j - rows / 2, 0);
       squares.push(square);
     }
@@ -49,9 +45,6 @@ function prepareCalibrationScene(rows: number, cols: number) {
   );
 }
 
-/**
- * @return {obj<string, array>} an object with two keys, ```inc``` and ```exc```, refering to objects to include and exclude
- */
 function generateProps() {
   const { scene, origin } = getAPI();
 
@@ -62,7 +55,7 @@ function generateProps() {
       new THREE.Box3(origin, new THREE.Vector3(2, 2, 2)),
       0x000000
     ),
-    gridHelper = new THREE.GridHelper(10, 10, 0x00ffff, 0xff00ff),
+    gridHelper = new THREE.GridHelper(20, 20, 0x005353, 0x530053),
     geometry = new THREE.BoxGeometry(1, 1, 1);
 
   helper.position.set(origin.x, origin.y, origin.z);

@@ -1,3 +1,6 @@
+let suppressTimer = false
+export const setSuppressTimer = (state: boolean) => suppressTimer = state
+
 /**
  * A timer for measuring performance. call start() *with a label, please*, then call finish(). easy.
  */
@@ -19,6 +22,7 @@ export default class Timer {
   }
   finish() {
     this.end = performance.now();
-    console.log(`Timer: ${this.label} took ${this.end - this.begin}ms`);
+    if (suppressTimer) return
+    console.log(`Timer: ${this.label} took ${(this.end - this.begin).toFixed(3)}ms`);
   }
 }
