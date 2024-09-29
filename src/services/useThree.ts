@@ -6,6 +6,8 @@ import { doStereoCalibration } from '../lib/stereoCalibration';
 import { doStereoVis } from '../lib/stereoVision';
 import { prepareCalibrationScene, generateProps } from '../lib/sceneCreation';
 import { init, getAPI } from '../lib/gfx_state';
+import { ConfigType } from '../ThreeImpl/ThreeImpl';
+import { INITIAL_STEREO_HEIGHT, INITIAL_STEREO_WIDTH } from '../lib/constants';
 
 
 console.log('calling init');
@@ -78,6 +80,28 @@ function checkIntersections() {
 }
 
 /**
+ * calculate pointer position in normalized device coordinates,
+ * (-1 to +1) for both components. note that the y component is inverted,
+ * and that we assume that the main viewer is double the size of each
+ * camera in the stereo pair, (ie, the viewer is 2x the width and 2x the height)
+ */
+const movePointerHandler = (ev: PointerEvent) => {
+  const { pointer } = getAPI();
+  pointer.y = -(ev.offsetY / (INITIAL_STEREO_HEIGHT * 2)) * 2 + 1;
+  pointer.x = (ev.offsetX / (INITIAL_STEREO_WIDTH * 2)) * 2 - 1;
+}
+
+const clickHandler = (_: MouseEvent) => {
+  const { intersectedObj } = getAPI();
+  if (intersectedObj?.type == 'Mesh') console.log(intersectedObj.uuid);
+}
+
+
+// create the renderers
+const renderer = new THREE.WebGLRenderer({ antialias: true }),
+  stereoRenderer = new THREE.WebGLRenderer({ antialias: true });
+
+/**
  * stuff that only has to happen on first load
  */
 function gfxSetup(el: HTMLDivElement, stereoEl: HTMLDivElement) {
@@ -100,36 +124,25 @@ function gfxSetup(el: HTMLDivElement, stereoEl: HTMLDivElement) {
   // create the stereo cam
   const newStereoCam = new THREE.StereoCamera();
   newStereoCam.update(newCamera);
-  // create the renderers
-  let renderer = new THREE.WebGLRenderer({ antialias: true }),
-    stereoRenderer = new THREE.WebGLRenderer({ antialias: true });
   // setup for renderers
-  renderer.setSize(viewerDims.w, viewerDims.h);
+  renderer.setSize(viewerDims.w * 2, viewerDims.h * 2);
   stereoRenderer.setSize(viewerDims.w, viewerDims.h / 2);
   // dont really know where to put this
-  let controls = new OrbitControls(newCamera, renderer.domElement);
+  const controls = new OrbitControls(newCamera, renderer.domElement);
   controls.update();
-  // attach the renderers
-  if (el.children.length > 0) {
-    el.removeChild(el.children[0]);
-  }
-  if (stereoEl.children.length > 0) {
-    stereoEl.removeChild(stereoEl.children[0]);
-  }
-  el.appendChild(renderer.domElement);
-  stereoEl.appendChild(stereoRenderer.domElement);
+  // add the renderers to the dom (maybe)
+  if (el.children.length === 0) el.appendChild(renderer.domElement);
+  if (stereoEl.children.length === 0) stereoEl.appendChild(stereoRenderer.domElement);
+  // ensure the renderer is a consistent size
+  renderer.domElement.style.width = `${INITIAL_STEREO_WIDTH * 2}px`;
+  renderer.domElement.style.height = `${INITIAL_STEREO_HEIGHT * 2}px`;
+  stereoRenderer.domElement.style.width = `${INITIAL_STEREO_WIDTH * 2}px`;
+  stereoRenderer.domElement.style.height = `${INITIAL_STEREO_HEIGHT}px`;
   // setup event listeners for raycasting stuff
-  renderer.domElement.addEventListener('pointermove', (ev) => {
-    const { pointer } = getAPI();
-    // calculate pointer position in normalized device coordinates
-    // (-1 to +1) for both components
-    pointer.y = -(ev.offsetY / viewerDims.h) * 2 + 1;
-    pointer.x = (ev.offsetX / viewerDims.w) * 2 - 1;
-  });
-  renderer.domElement.addEventListener('click', (ev) => {
-    const { intersectedObj } = getAPI();
-    if (intersectedObj?.type == 'Mesh') console.log(intersectedObj.uuid);
-  });
+  renderer.domElement.removeEventListener('pointermove', movePointerHandler)
+  renderer.domElement.removeEventListener('click', clickHandler);
+  renderer.domElement.addEventListener('pointermove', movePointerHandler);
+  renderer.domElement.addEventListener('click', clickHandler);
 
   setCamera(newCamera);
   setStereoCamera(newStereoCam);
@@ -140,20 +153,26 @@ function gfxSetup(el: HTMLDivElement, stereoEl: HTMLDivElement) {
  * calls the setup method, preps the render function,
  * and attaches the render loop
  */
-function attachAndRender(el: HTMLDivElement, stereoEl: HTMLDivElement, leftOut: HTMLCanvasElement, rightOut: HTMLCanvasElement, dispMapEl: HTMLCanvasElement, reprojectMapEl: HTMLCanvasElement) {
-  const { scene, calibrationScene } = getAPI();
+function attachAndRender(el: HTMLDivElement, stereoEl: HTMLDivElement, leftOut: HTMLCanvasElement, rightOut: HTMLCanvasElement, dispMapEl: HTMLCanvasElement, reprojectMapEl: HTMLCanvasElement, config: ConfigType) {
+  THREE.Cache.clear();
+
+  const { eyeSep: newEyeSep, stereoWidth, stereoHeight } = config;
+  const { scene, calibrationScene, f, setEyeSep, setViewerDimensions } = getAPI();
+  // set the config values
+  setEyeSep(newEyeSep);
+  setViewerDimensions({ w: stereoWidth, h: stereoHeight });
+
   const { renderer, stereoRenderer } = gfxSetup(el, stereoEl);
+  const size = new THREE.Vector2();
   console.log('gfx setup complete');
-  // renderer.setAnimationLoop(render);
+
+  cancelAnimationFrame(f);
 
   /**
    * this is the render loop. it performs dark magic
    */
   function render() {
-    // complete the recursion
-    // f = requestAnimationFrame(render);
-    // console.log('rendering frame', renderer.domElement);
-    const { camera, origin, stereoCam, f, setFrameCounter } = getAPI();
+    const { camera, origin, stereoCam, eyeSep, f, setFrameCounter } = getAPI();
 
     camera.lookAt(origin);
     camera.updateMatrixWorld();
@@ -165,11 +184,11 @@ function attachAndRender(el: HTMLDivElement, stereoEl: HTMLDivElement, leftOut: 
 
     // ============================================================================
     // code from stackoverflow https://stackoverflow.com/questions/61052900/can-anyone-explain-what-is-going-on-in-this-code-for-three-js-stereoeffect
-    const size = new THREE.Vector2();
     camera.updateWorldMatrix(true, true);
     stereoCam.update(camera);
     // baseline setter
-    stereoCam.eyeSep = 0.5;
+    // console.log('eye sep', eyeSep);
+    stereoCam.eyeSep = eyeSep;
     // this is described in the post on stackoverflow
     stereoRenderer.getSize(size);
     stereoRenderer.setScissorTest(true);
@@ -187,7 +206,7 @@ function attachAndRender(el: HTMLDivElement, stereoEl: HTMLDivElement, leftOut: 
       try {
         doStereoVis(stereoRenderer.domElement, leftOut, rightOut, dispMapEl, reprojectMapEl);
       } catch (e) {
-        console.log('fug', e);
+        console.log('fug', { e });
       }
     }
     setFrameCounter(requestAnimationFrame(render));
@@ -196,18 +215,6 @@ function attachAndRender(el: HTMLDivElement, stereoEl: HTMLDivElement, leftOut: 
   console.log('render loop started', scene, calibrationScene);
 
   render();
-
-  // // call the render loop as a promise fulfillment because this module is lorg
-  // //@ts-expect-error
-  // opencv().then((val: CV) => {
-  //     console.log('opencv ready');
-  //     // @ts-expect-error we are setting the cv object here... typescript is not happy
-  //     cv = val;
-  //     signalCvReady();
-  //     render();
-  //     console.log('render loop started');
-  // });
-  // ^^^ this is the original code, but we are going to use the opencv promise in the main app
 }
 
 export default function useThree() {

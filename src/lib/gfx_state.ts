@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import ScalarMatMap from './ScalarMatMap';
 import { Mat } from 'mirada';
+import { INITIAL_EYE_SEP, INITIAL_HIGHLIGHT_COLOR, INITIAL_STEREO_HEIGHT, INITIAL_STEREO_WIDTH } from './constants';
 
 type ViewerDimensions = {
   w: number;
@@ -73,16 +74,18 @@ class GFXState {
   raycastExcludeList: THREE.Object3D['id'][];
   /** a map representing all renderable objects currently in the world */
   worldMap: { calib: Record<string, THREE.Object3D>; prod: Record<string, THREE.Object3D>; };
+  /** the distance between the two eyes */
+  eyeSep: number;
   /** frame counter */
   f: number;
 
   constructor() {
     console.log('gfxstate constructor');
-    this.HIGHLIGHT_COLOR = 0xff0000;
+    this.HIGHLIGHT_COLOR = INITIAL_HIGHLIGHT_COLOR;
     this.origin = new THREE.Vector3(0, 0, 0);
     this.viewerDims = {
-      w: 1280,
-      h: 720,
+      w: INITIAL_STEREO_WIDTH,
+      h: INITIAL_STEREO_HEIGHT,
     };
     this.camera = new THREE.PerspectiveCamera();
     this.stereoCam = new THREE.StereoCamera();
@@ -91,11 +94,6 @@ class GFXState {
     this.calibrationMode = false;
     this.captureCalibPair = false;
     this.capturedCalibPairs = [];
-    // this.calibResults = {
-    //   l: { map1: new cv.Mat(), map2: new cv.Mat() },
-    //   r: { map1: new cv.Mat(), map2: new cv.Mat() },
-    //   q: new cv.Mat(),
-    // };
     //@ts-expect-error
     this.calibResults = null;
     this.haveCalibResults = false;
@@ -110,6 +108,7 @@ class GFXState {
       calib: {},
       prod: {},
     };
+    this.eyeSep = INITIAL_EYE_SEP;
     this.f = 0;
 
     this.resetState();
@@ -131,11 +130,6 @@ class GFXState {
     this.calibrationMode = false;
     this.captureCalibPair = false;
     this.capturedCalibPairs = [];
-    // this.calibResults = {
-    //   l: { map1: new cv.Mat(), map2: new cv.Mat() },
-    //   r: { map1: new cv.Mat(), map2: new cv.Mat() },
-    //   q: new cv.Mat(),
-    // };
     //@ts-expect-error
     this.calibResults = null;
     this.haveCalibResults = false;
@@ -150,6 +144,7 @@ class GFXState {
       calib: {},
       prod: {},
     };
+    // this.eyeSep = INITIAL_EYE_SEP;
     this.f = 0;
 
     this.scene.background = new THREE.Color(0xf0f0f0);
@@ -190,6 +185,7 @@ class GFXState {
       oldColor: this.oldColor,
       raycastExcludeList: this.raycastExcludeList,
       worldMap: this.worldMap,
+      eyeSep: this.eyeSep,
       f: this.f,
       resetState: () => this.resetState(),
       freeMats: (...mats: Mat[]) => this.freeMats(mats),
@@ -202,6 +198,9 @@ class GFXState {
       setIntersectedObj: (val: THREE.Mesh<any, THREE.MeshLambertMaterial> | null) => (this.intersectedObj = val),
       setHaveCalibResults: (val: boolean) => (this.haveCalibResults = val),
       setCalibResults: (val: DistMapsAndQ) => (this.calibResults = val),
+      setEyeSep: (val: number) => (this.eyeSep = val),
+      /** supply this with the target dims of __ONE OF__ the stereo cameras (the main viewer is 4x the size, 2x each edge dimension) */
+      setViewerDimensions: ({ w, h }: ViewerDimensions) => (this.viewerDims = { w: w * 2, h: h * 2 }),
       revertIntersectedObjColor: () => {
         if (this.intersectedObj !== null) {
           this.intersectedObj.material.emissive.setHex(this.oldColor);

@@ -22,7 +22,7 @@ function doStereoVis(stereoCamDomEl: HTMLCanvasElement, leftOut: HTMLCanvasEleme
     freeMats,
   } = getAPI();
 
-  let gl = stereoCamDomEl.getContext('webgl2');
+  const gl = stereoCamDomEl.getContext('webgl2');
   if (!gl) {
     console.error('no gl context');
     return;
