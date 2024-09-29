@@ -25,7 +25,7 @@ function prepareCalibrationScene(rows: number, cols: number) {
       side: THREE.DoubleSide,
     });
 
-  let squares = [];
+  const squares = [];
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
       // every other square should be white

@@ -67,7 +67,7 @@ class GFXState {
   /** used for raycasting, stores the location of the mouse on the canvas */
   pointer: THREE.Vector2;
   /** used for raycasting, stores the currently intersected object  */
-  intersectedObj: THREE.Mesh<any, THREE.MeshLambertMaterial> | null;
+  intersectedObj: THREE.Mesh<THREE.BufferGeometry, THREE.MeshLambertMaterial> | null;
   /** used for raycasting, stores the original color of an object */
   oldColor: number;
   /** a list of all objects which are to be passed over during raycasting */
@@ -94,7 +94,7 @@ class GFXState {
     this.calibrationMode = false;
     this.captureCalibPair = false;
     this.capturedCalibPairs = [];
-    //@ts-expect-error
+    //@ts-expect-error this is really a `DistMapsAndQ` object, but we have to initialize it as null
     this.calibResults = null;
     this.haveCalibResults = false;
     this.stereoMatcher = new StereoMatcher();
@@ -130,7 +130,7 @@ class GFXState {
     this.calibrationMode = false;
     this.captureCalibPair = false;
     this.capturedCalibPairs = [];
-    //@ts-expect-error
+    //@ts-expect-error this is really a `DistMapsAndQ` object, but we have to initialize it as null
     this.calibResults = null;
     this.haveCalibResults = false;
     this.stereoMatcher = new StereoMatcher();
@@ -195,7 +195,7 @@ class GFXState {
       setFrameCounter: (val: number) => (this.f = val),
       setCalibrationMode: (val: boolean) => (this.calibrationMode = val),
       setCaptureCalibPair: (val: boolean) => (this.captureCalibPair = val),
-      setIntersectedObj: (val: THREE.Mesh<any, THREE.MeshLambertMaterial> | null) => (this.intersectedObj = val),
+      setIntersectedObj: (val: THREE.Mesh<THREE.BufferGeometry, THREE.MeshLambertMaterial> | null) => (this.intersectedObj = val),
       setHaveCalibResults: (val: boolean) => (this.haveCalibResults = val),
       setCalibResults: (val: DistMapsAndQ) => (this.calibResults = val),
       setEyeSep: (val: number) => (this.eyeSep = val),
