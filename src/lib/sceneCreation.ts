@@ -104,7 +104,7 @@ function addObjToCollection(objMap: IncExcMap, collection: THREE.Scene | THREE.G
   objMap.exc.forEach(pusher);
   objMap.inc.forEach(pusher);
 
-  console.log('worldMap', worldMap);
+  // console.log('worldMap', worldMap);
 }
 
 export { generateProps, prepareCalibrationScene };

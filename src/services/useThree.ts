@@ -9,8 +9,8 @@ import { init, getAPI } from '../lib/gfx_state';
 import { ConfigType } from '../ThreeImpl/ThreeImpl';
 import { INITIAL_STEREO_HEIGHT, INITIAL_STEREO_WIDTH } from '../lib/constants';
 
-
-console.log('calling init');
+// on first load, bootstrap the application
+// hopefully this is the only time this function is called (ub if not)
 init();
 
 /** 
@@ -134,10 +134,12 @@ function gfxSetup(el: HTMLDivElement, stereoEl: HTMLDivElement) {
   if (el.children.length === 0) el.appendChild(renderer.domElement);
   if (stereoEl.children.length === 0) stereoEl.appendChild(stereoRenderer.domElement);
   // ensure the renderer is a consistent size
-  renderer.domElement.style.width = `${INITIAL_STEREO_WIDTH * 2}px`;
-  renderer.domElement.style.height = `${INITIAL_STEREO_HEIGHT * 2}px`;
+  renderer.domElement.style.width = `${Math.floor(INITIAL_STEREO_WIDTH * 1.5).toFixed(0)}px`;
+  renderer.domElement.style.height = `${Math.floor(INITIAL_STEREO_HEIGHT * 1.5).toFixed(0)}px`;
+  renderer.domElement.id = 'main-viewer';
   stereoRenderer.domElement.style.width = `${INITIAL_STEREO_WIDTH * 2}px`;
   stereoRenderer.domElement.style.height = `${INITIAL_STEREO_HEIGHT}px`;
+  stereoRenderer.domElement.id = 'stereo-viewer';
   // setup event listeners for raycasting stuff
   renderer.domElement.removeEventListener('pointermove', movePointerHandler)
   renderer.domElement.removeEventListener('click', clickHandler);
@@ -157,14 +159,14 @@ function attachAndRender(el: HTMLDivElement, stereoEl: HTMLDivElement, leftOut: 
   THREE.Cache.clear();
 
   const { eyeSep: newEyeSep, stereoWidth, stereoHeight } = config;
-  const { scene, calibrationScene, f, setEyeSep, setViewerDimensions } = getAPI();
+  const { f, setEyeSep, setViewerDimensions } = getAPI();
   // set the config values
   setEyeSep(newEyeSep);
   setViewerDimensions({ w: stereoWidth, h: stereoHeight });
 
   const { renderer, stereoRenderer } = gfxSetup(el, stereoEl);
   const size = new THREE.Vector2();
-  console.log('gfx setup complete');
+  // console.log('gfx setup complete');
 
   cancelAnimationFrame(f);
 
@@ -212,7 +214,7 @@ function attachAndRender(el: HTMLDivElement, stereoEl: HTMLDivElement, leftOut: 
     setFrameCounter(requestAnimationFrame(render));
   }
 
-  console.log('render loop started', scene, calibrationScene);
+  // console.log('render loop started', scene, calibrationScene);
 
   render();
 }

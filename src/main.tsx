@@ -11,6 +11,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Suspense fallback={<Loading />}>
       <App />
+      {/* <Loading /> */}
     </Suspense>
   </StrictMode>
 );

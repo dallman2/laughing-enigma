@@ -1,4 +1,4 @@
-let suppressTimer = false
+let suppressTimer = true
 export const setSuppressTimer = (state: boolean) => suppressTimer = state
 
 /**

@@ -43,7 +43,7 @@ const ThreeImpl = () => {
   const reprojectMap = React.useRef<HTMLCanvasElement>(null);
 
   const [calibMode, setCalibMode] = React.useState(false);
-  const [localSuppressTimer, setLocalSuppressTimer] = React.useState(false);
+  const [localSuppressTimer, setLocalSuppressTimer] = React.useState(true);
   const [capturedPairs, setCapturedPairs] = React.useState(0);
   const [config, setConfig] = React.useState(defaultConfig);
 
@@ -67,7 +67,7 @@ const ThreeImpl = () => {
         dispMap.current &&
         reprojectMap.current
       ) {
-        console.log("attaching and rendering");
+        // console.log("attaching and rendering");
         attachAndRender(
           threeContainer.current,
           threeStereoContainer.current,
@@ -150,6 +150,8 @@ const ThreeImpl = () => {
           <input
             className="mx-3 px-1"
             step={0.01}
+            min={0.05}
+            max={2}
             type="number"
             value={config.eyeSep}
             onChange={bindConfigChangeHandler("eyeSep")}
@@ -159,6 +161,9 @@ const ThreeImpl = () => {
           Stereo viewer dimensions (per eye width):
           <input
             className="mx-3 px-1"
+            min={270}
+            max={1280}
+            step={16}
             type="number"
             value={config.stereoWidth}
             onChange={bindConfigChangeHandler("stereoWidth")}
@@ -168,6 +173,9 @@ const ThreeImpl = () => {
           Stereo viewer dimensions (per eye height):
           <input
             className="mx-3 px-1"
+            min={270}
+            max={1280}
+            step={16}
             type="number"
             value={config.stereoHeight}
             onChange={bindConfigChangeHandler("stereoHeight")}

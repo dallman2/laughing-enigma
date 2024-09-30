@@ -18,7 +18,7 @@ const App = () => {
   }
 
   return (
-    <div className="column align-center">
+    <div style={{ maxHeight: "100vh" }} className="column align-center">
       <h1>OpenCV, in the browser</h1>
       <ThreeImpl />
     </div>
