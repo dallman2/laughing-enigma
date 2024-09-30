@@ -80,7 +80,6 @@ class GFXState {
   f: number;
 
   constructor() {
-    console.log('gfxstate constructor');
     this.HIGHLIGHT_COLOR = INITIAL_HIGHLIGHT_COLOR;
     this.origin = new THREE.Vector3(0, 0, 0);
     this.viewerDims = {
@@ -219,7 +218,6 @@ class GFXState {
  * to be called at the very beginning to set up the instance
  */
 function init() {
-  console.log('gfxstate init');
   if (classInstance) console.log('gfxstate already initialized?');
   else classInstance = new GFXState();
 }
