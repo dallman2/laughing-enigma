@@ -7,6 +7,7 @@ import {
   INITIAL_STEREO_HEIGHT,
   INITIAL_STEREO_WIDTH,
 } from "../lib/constants";
+import { saveCalibResultsToDisk } from "../lib/vfsApi";
 
 const defaultConfig = {
   eyeSep: INITIAL_EYE_SEP,
@@ -108,6 +109,13 @@ const ThreeImpl = () => {
       distMapsAndQ: getStereoCalibrationResults(),
     });
   };
+  const handleCalibSave = async () => {
+    await saveCalibResultsToDisk(
+      getStereoCalibrationResults(),
+      "calibResults.json"
+    );
+    console.log("calibration results saved");
+  };
   const bindConfigChangeHandler =
     (target: keyof typeof config): React.ChangeEventHandler<HTMLInputElement> =>
     (e) =>
@@ -132,11 +140,12 @@ const ThreeImpl = () => {
           <button className="mx-1 py-1 px-2" onClick={handleTimerToggle}>
             Suppress timer logging: {localSuppressTimer ? "ON" : "OFF"}
           </button>
-          {haveCalibResults && (
-            <button className="mx-1 py-1 px-2" onClick={handleCalibDump}>
-              Dump calibration results to console
-            </button>
-          )}
+          <button className="mx-1 py-1 px-2" onClick={handleCalibDump}>
+            Dump calibration results to console
+          </button>
+          <button className="mx-1 py-1 px-2" onClick={handleCalibSave}>
+            Save calibration results to disk
+          </button>
         </div>
         {calibMode && (
           <div className="row justify-center align-center">

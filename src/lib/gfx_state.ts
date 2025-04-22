@@ -15,7 +15,7 @@ type MapPair = {
   map1: Mat;
   map2: Mat;
 };
-type DistMapsAndQ = {
+export type DistMapsAndQ = {
   l: MapPair;
   r: MapPair;
   q: Mat;

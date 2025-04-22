@@ -9,7 +9,7 @@ const App = () => {
     throw new Promise<void>((resolve) => {
       // call the render loop as a promise fulfillment because this module is lorg
       (opencv as () => Promise<CV>)().then((val: CV) => {
-        console.log("opencv ready");
+        console.log(`opencv ready, version: ${val.getBuildInformation()}`);
         // @ts-expect-error we are setting the cv object here... typescript is not happy
         cv = val;
         resolve();
