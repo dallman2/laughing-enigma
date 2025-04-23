@@ -7,7 +7,7 @@ import { doStereoVis } from '../lib/stereoVision';
 import { prepareCalibrationScene, generateProps } from '../lib/sceneCreation';
 import { init, getAPI } from '../lib/gfx_state';
 import { ConfigType } from '../ThreeImpl/ThreeImpl';
-import { INITIAL_STEREO_HEIGHT, INITIAL_STEREO_WIDTH } from '../lib/constants';
+import { INITIAL_STEREO_HEIGHT, INITIAL_STEREO_WIDTH, VIEWER_SCALING_FACTOR } from '../lib/constants';
 
 // on first load, bootstrap the application
 // hopefully this is the only time this function is called (ub if not)
@@ -87,8 +87,8 @@ function checkIntersections() {
  */
 const movePointerHandler = (ev: PointerEvent) => {
   const { pointer } = getAPI();
-  pointer.y = -(ev.offsetY / (INITIAL_STEREO_HEIGHT * 2)) * 2 + 1;
-  pointer.x = (ev.offsetX / (INITIAL_STEREO_WIDTH * 2)) * 2 - 1;
+  pointer.y = -(ev.offsetY / (INITIAL_STEREO_HEIGHT * VIEWER_SCALING_FACTOR)) * 2 + 1;
+  pointer.x = (ev.offsetX / (INITIAL_STEREO_WIDTH * VIEWER_SCALING_FACTOR)) * 2 - 1;
 }
 
 const clickHandler = () => {
@@ -134,8 +134,8 @@ function gfxSetup(el: HTMLDivElement, stereoEl: HTMLDivElement) {
   if (el.children.length === 0) el.appendChild(renderer.domElement);
   if (stereoEl.children.length === 0) stereoEl.appendChild(stereoRenderer.domElement);
   // ensure the renderer is a consistent size
-  renderer.domElement.style.width = `${Math.floor(INITIAL_STEREO_WIDTH * 1.5).toFixed(0)}px`;
-  renderer.domElement.style.height = `${Math.floor(INITIAL_STEREO_HEIGHT * 1.5).toFixed(0)}px`;
+  renderer.domElement.style.width = `${Math.floor(INITIAL_STEREO_WIDTH * VIEWER_SCALING_FACTOR).toFixed(0)}px`;
+  renderer.domElement.style.height = `${Math.floor(INITIAL_STEREO_HEIGHT * VIEWER_SCALING_FACTOR).toFixed(0)}px`;
   renderer.domElement.id = 'main-viewer';
   stereoRenderer.domElement.style.width = `${INITIAL_STEREO_WIDTH * 2}px`;
   stereoRenderer.domElement.style.height = `${INITIAL_STEREO_HEIGHT}px`;
