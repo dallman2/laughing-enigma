@@ -54,7 +54,6 @@ const ThreeImpl = () => {
     captureCalibrationPair,
     doStereoCalibration,
     getStereoCalibrationResults,
-    haveCalibResults,
   } = useThree();
 
   React.useEffect(() => {
