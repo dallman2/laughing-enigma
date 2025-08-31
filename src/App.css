@@ -1,5 +1,26 @@
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.tab-root {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.tab-list {
+  display: flex;
+  flex-direction: row;
+}
+
+.tab-content {
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
+  width: 100%;
+}
+
+.tab-trigger {
+  padding: 0 20px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mauve-11);
 }
