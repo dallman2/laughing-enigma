@@ -24,10 +24,12 @@ export type DistMapsAndQ = {
 let classInstance: GFXState | null = null;
 
 class StereoMatcher {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   stereoBM: any;
   constructor() {
     this.stereoBM = null;
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setBM(inst: any) {
     this.stereoBM = inst;
   }

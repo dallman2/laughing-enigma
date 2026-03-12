@@ -27,7 +27,7 @@ const Toolbar: React.FC<{
   );
 };
 
-const Canvas = React.forwardRef<HTMLCanvasElement>(({}, ref) => {
+const Canvas = React.forwardRef<HTMLCanvasElement>((_props, ref) => {
   return (
     <div className="canvas">
       <canvas id="easypic-canvas" width="800" height="600" ref={ref}></canvas>

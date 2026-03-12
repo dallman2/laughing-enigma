@@ -1,36 +1,52 @@
 import Timer from "./Timer";
 import { getAPI } from "./gfx_state";
+import { Mat } from "mirada";
 
-// let firstRender = true,
-//   undistL: Mat = null!,
-//   undistR: Mat = null!,
-//   grayL: Mat = null!,
-//   grayR: Mat = null!,
-//   dispMap: Mat = null!,
-//   dispMapConv: Mat = null!,
-//   flipped: Mat = null!;
-// const getMatHandles = () => {
-//   if (firstRender) {
-//     console.log('first render, allocating');
-//     undistL = new cv.Mat()
-//     undistR = new cv.Mat()
-//     grayL = new cv.Mat()
-//     grayR = new cv.Mat()
-//     dispMap = new cv.Mat()
-//     dispMapConv = new cv.Mat()
-//     flipped = new cv.Mat();
-//     firstRender = false;
-//   }
-//   return {
-//     undistL,
-//     undistR,
-//     grayL,
-//     grayR,
-//     dispMap,
-//     dispMapConv,
-//     flipped,
-//   };
-// }
+// Persistent caches to prevent per-frame allocations
+let cachedPixels: Uint8Array | null = null;
+
+function getPixelsBuffer(w: number, h: number): Uint8Array {
+  const size = w * h * 4;
+  if (!cachedPixels || cachedPixels.length !== size) {
+    cachedPixels = new Uint8Array(size);
+  }
+  return cachedPixels;
+}
+
+interface StereoMats {
+  initialized: boolean;
+  undistL?: Mat;
+  undistR?: Mat;
+  grayL?: Mat;
+  grayR?: Mat;
+  dispMap?: Mat;
+  dispMapConv?: Mat;
+  flipped?: Mat;
+  orig?: Mat;
+  pointCloudOutImg?: Mat;
+  pointCloudOutImgTformed?: Mat;
+}
+
+const matCache: StereoMats = {
+  initialized: false,
+};
+
+function getMats() {
+  if (matCache.initialized) return matCache as Required<StereoMats>;
+  matCache.undistL = new cv.Mat();
+  matCache.undistR = new cv.Mat();
+  matCache.grayL = new cv.Mat();
+  matCache.grayR = new cv.Mat();
+  matCache.dispMap = new cv.Mat();
+  matCache.dispMapConv = new cv.Mat();
+  matCache.flipped = new cv.Mat();
+  matCache.orig = new cv.Mat();
+  matCache.pointCloudOutImg = new cv.Mat();
+  matCache.pointCloudOutImgTformed = new cv.Mat();
+  matCache.initialized = true;
+  return matCache as Required<StereoMats>;
+}
+
 /**
  * do the thing, ya know?
  * the block matching/ calib stuff tutorial was found on
@@ -45,22 +61,7 @@ function doStereoVis(
   dispMapEl: HTMLCanvasElement,
   reprojectMapEl: HTMLCanvasElement
 ) {
-  // const {
-  //   undistL,
-  //   undistR,
-  //   grayL,
-  //   grayR,
-  //   dispMap,
-  //   dispMapConv,
-  //   flipped,
-  // } = getMatHandles()
-  const undistL = new cv.Mat(),
-    undistR = new cv.Mat(),
-    grayL = new cv.Mat(),
-    grayR = new cv.Mat(),
-    dispMap = new cv.Mat(),
-    dispMapConv = new cv.Mat(),
-    flipped = new cv.Mat();
+  const mats = getMats();
   const {
     calibrationMode,
     captureCalibPair,
@@ -78,32 +79,36 @@ function doStereoVis(
     console.error("no gl context");
     return;
   }
-  const pixels = new Uint8Array(
-    gl.drawingBufferHeight * gl.drawingBufferWidth * 4
-  ),
-    h = gl.drawingBufferHeight,
-    w = gl.drawingBufferWidth,
-    t = new Timer();
+
+  const h = gl.drawingBufferHeight;
+  const w = gl.drawingBufferWidth;
+  const pixels = getPixelsBuffer(w, h);
+  const t = new Timer();
 
   t.start("stereo vis");
   // get image from stereo canvas
   gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-  // create a mat for the flipped version of the image
-  const orig = cv.matFromArray(h, w, cv.CV_8UC4, pixels);
-  // const orig = cv.imread(stereoCamDomEl);
-  flipped.create(h, w, cv.CV_8UC4);
+
+  // Ensure 'orig' is allocated with the correct type and size
+  if (mats.orig.cols !== w || mats.orig.rows !== h || mats.orig.type() !== cv.CV_8UC4) {
+    mats.orig.create(h, w, cv.CV_8UC4);
+  }
+  // Copy straight into the Mat's data heap view to avoid cv.matFromArray allocation
+  mats.orig.data.set(pixels);
+
+  mats.flipped.create(h, w, cv.CV_8UC4);
   // flip it
-  cv.flip(orig, flipped, 0);
-  // cut into left and right eye views
-  const leftEye = flipped.roi(new cv.Rect(0, 0, w / 2, h));
-  const rightEye = flipped.roi(new cv.Rect(w / 2, 0, w / 2, h));
+  cv.flip(mats.orig, mats.flipped, 0);
+  
+  // cut into left and right eye views (ROIs create small headers we still must clean up)
+  const leftEye = mats.flipped.roi(new cv.Rect(0, 0, w / 2, h));
+  const rightEye = mats.flipped.roi(new cv.Rect(w / 2, 0, w / 2, h));
 
   // the user has issued a command to capture a stereo image pair
-  let del = true;
   if (calibrationMode && captureCalibPair) {
-    capturedCalibPairs.push({ l: leftEye, r: rightEye });
+    // Clone matrices so they persist safely apart from our per-frame mats.flipped
+    capturedCalibPairs.push({ l: leftEye.clone(), r: rightEye.clone() });
     setCaptureCalibPair(false);
-    del = false;
   }
 
   // if we have loaded in or found a mapping
@@ -113,100 +118,68 @@ function doStereoVis(
       stereoMatcher.setBM(new cv.StereoBM());
     }
 
-    cv.cvtColor(leftEye, grayL, cv.COLOR_BGR2GRAY);
-    cv.cvtColor(rightEye, grayR, cv.COLOR_BGR2GRAY);
+    cv.cvtColor(leftEye, mats.grayL, cv.COLOR_BGR2GRAY);
+    cv.cvtColor(rightEye, mats.grayR, cv.COLOR_BGR2GRAY);
     cv.remap(
-      grayL,
-      undistL,
+      mats.grayL,
+      mats.undistL,
       calibResults.l.map1,
       calibResults.l.map2,
       cv.INTER_LANCZOS4,
       cv.BORDER_CONSTANT
     );
     cv.remap(
-      grayR,
-      undistR,
+      mats.grayR,
+      mats.undistR,
       calibResults.r.map1,
       calibResults.r.map2,
       cv.INTER_LANCZOS4,
       cv.BORDER_CONSTANT
     );
-    cv.imshow(leftOut, undistL);
-    cv.imshow(rightOut, undistR);
+    cv.imshow(leftOut, mats.undistL);
+    cv.imshow(rightOut, mats.undistR);
     // compute disp
-    stereoMatcher.stereoBM.compute(undistL, undistR, dispMap);
+    stereoMatcher.stereoBM.compute(mats.undistL, mats.undistR, mats.dispMap);
     // do the conversion
-    dispMap.convertTo(dispMapConv, cv.CV_32F);
-    // dispMapConv = dispMapConv / 16;
+    mats.dispMap.convertTo(mats.dispMapConv, cv.CV_32F);
+    
     cv.divide(
-      dispMapConv,
+      mats.dispMapConv,
       scalarMap.getMat(leftEye.size(), 16, cv.CV_32F),
-      dispMapConv
+      mats.dispMapConv
     );
-    // dispMapConv = dispMapConv - stereoMatcher.getMinDisparity();
+    
     cv.subtract(
-      dispMapConv,
+      mats.dispMapConv,
       scalarMap.getMat(
         leftEye.size(),
         stereoMatcher.stereoBM.getMinDisparity(),
         cv.CV_32F
       ),
-      dispMapConv
+      mats.dispMapConv
     );
-    // dispMapConv = dispMapConv / stereoMatcher.getNumDisparities();
+    
     cv.divide(
-      dispMapConv,
+      mats.dispMapConv,
       scalarMap.getMat(
         leftEye.size(),
         stereoMatcher.stereoBM.getNumDisparities(),
         cv.CV_32F
       ),
-      dispMapConv
+      mats.dispMapConv
     );
 
-    const pointCloudOutImg = new cv.Mat(dispMapConv.size(), cv.CV_32FC3);
-    const pointCloudOutImgTformed = new cv.Mat(dispMapConv.size(), cv.CV_32FC3);
+    cv.reprojectImageTo3D(mats.dispMapConv, mats.pointCloudOutImg, calibResults.q, true);
 
-    cv.reprojectImageTo3D(dispMapConv, pointCloudOutImg, calibResults.q, true);
-    // console.log(
-    // "point cloud",
-    // {
-    //   size: pointCloudOutImg.size(),
-    //   channels: pointCloudOutImg.channels(),
-    //   depth: pointCloudOutImg.depth(),
-    //   type: pointCloudOutImg.type(),
-    //   elemSize: pointCloudOutImg.elemSize(),
-    //   x: pointCloudOutImg.floatAt(200, 200 * pointCloudOutImg.channels()),
-    //   y: pointCloudOutImg.floatAt(200, 200 * pointCloudOutImg.channels() + 1),
-    //   z: pointCloudOutImg.floatAt(200, 200 * pointCloudOutImg.channels() + 2)
-    // }
-    // pointCloudOutImg.floatAt(200, 200 * pointCloudOutImg.channels()),
-    // pointCloudOutImg.floatAt(200, 200 * pointCloudOutImg.channels() + 1),
-    // pointCloudOutImg.floatAt(200, 200 * pointCloudOutImg.channels() + 2)
-    // );
-
-    cv.imshow(dispMapEl, dispMapConv);
-    cv.imshow(reprojectMapEl, pointCloudOutImg);
-    // clean up
-    freeMats(
-      undistL,
-      undistR,
-      grayL,
-      grayR,
-      dispMap,
-      dispMapConv,
-      pointCloudOutImg,
-      pointCloudOutImgTformed
-    );
+    cv.imshow(dispMapEl, mats.dispMapConv);
+    cv.imshow(reprojectMapEl, mats.pointCloudOutImg);
   } else {
     cv.imshow(leftOut, leftEye);
     cv.imshow(rightOut, rightEye);
   }
 
-  freeMats(orig, flipped);
-  if (del) {
-    freeMats(leftEye, rightEye);
-  }
+  // Clean up ROIs allocated this frame
+  freeMats(leftEye, rightEye);
   t.finish();
 }
 

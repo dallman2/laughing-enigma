@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import "@tensorflow/tfjs-backend-webgl";
 import "@tensorflow/tfjs-backend-webgpu";
 
-const loadModel = async (imgElement: HTMLImageElement, files: File[]) => {
+const loadModel = async (imgElement: HTMLImageElement) => {
   const resp = await tf.setBackend("webgpu");
   console.log("tfjs backend success:", resp);
   console.log("tf data:", {
@@ -57,7 +57,7 @@ const TfjsImpl = () => {
     } else {
       const executor = async () => {
         try {
-          await loadModel(imgRef.current as HTMLImageElement, files);
+          await loadModel(imgRef.current as HTMLImageElement);
           console.log("done");
         } catch (error) {
           console.error("Error loading model:", error);
