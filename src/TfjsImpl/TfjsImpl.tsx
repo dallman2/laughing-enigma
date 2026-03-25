@@ -4,10 +4,9 @@ import * as tf from "@tensorflow/tfjs";
 import { useEffect, useRef, useState } from "react";
 
 import "@tensorflow/tfjs-backend-webgl";
-import "@tensorflow/tfjs-backend-webgpu";
 
 const loadModel = async (imgElement: HTMLImageElement) => {
-  const resp = await tf.setBackend("webgpu");
+  const resp = await tf.setBackend("webgl");
   console.log("tfjs backend success:", resp);
   console.log("tf data:", {
     version: tf.version.tfjs,
@@ -65,7 +64,7 @@ const TfjsImpl = () => {
       };
       executor();
     }
-  }, [imgRef.current, files, loadModel]);
+  }, [files]);
 
   return (
     <div>

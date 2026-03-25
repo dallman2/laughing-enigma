@@ -12,17 +12,9 @@ const Toolbar: React.FC<{
     console.log("handle1", file);
     setFile(file);
   };
-  const handle2 = () => console.log("handle2");
-  const handle3 = () => console.log("handle3");
   return (
     <div className="toolbar">
       <input className="toolbar-button" type="file" onChange={handle1} />
-      <button className="toolbar-button" onClick={handle2}>
-        Button 2
-      </button>
-      <button className="toolbar-button" onClick={handle3}>
-        Button 3
-      </button>
     </div>
   );
 };

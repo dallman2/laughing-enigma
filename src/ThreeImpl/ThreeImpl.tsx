@@ -1,11 +1,24 @@
 import React from "react";
 import "./ThreeImpl.css";
-import useThree from "../services/useThree";
+import {
+  attachAndRender,
+  updateConfig,
+  toggleCalibrationMode,
+  captureCalibrationPair,
+  doStereoCalibration,
+  getStereoCalibrationResults,
+} from "../services/gfxService";
 import { setSuppressTimer } from "../lib/Timer";
 import {
   INITIAL_EYE_SEP,
   INITIAL_STEREO_HEIGHT,
   INITIAL_STEREO_WIDTH,
+  STEREO_DIM_MIN,
+  STEREO_DIM_MAX,
+  STEREO_DIM_STEP,
+  EYE_SEP_MIN,
+  EYE_SEP_MAX,
+  EYE_SEP_STEP,
 } from "../lib/constants";
 import { saveCalibResultsToDisk } from "../lib/vfsApi";
 
@@ -48,17 +61,10 @@ const ThreeImpl = () => {
   const [capturedPairs, setCapturedPairs] = React.useState(0);
   const [config, setConfig] = React.useState(defaultConfig);
 
-  const {
-    attachAndRender,
-    toggleCalibrationMode,
-    captureCalibrationPair,
-    doStereoCalibration,
-    getStereoCalibrationResults,
-  } = useThree();
-
+  // Mount effect — sets up scene and render loop once
   React.useEffect(() => {
+    let dispose: (() => void) | null = null;
     try {
-      checkConfig(config);
       if (
         threeContainer.current &&
         threeStereoContainer.current &&
@@ -67,29 +73,33 @@ const ThreeImpl = () => {
         dispMap.current &&
         reprojectMap.current
       ) {
-        // console.log("attaching and rendering");
-        attachAndRender(
+        dispose = attachAndRender(
           threeContainer.current,
           threeStereoContainer.current,
           leftEye.current,
           rightEye.current,
           dispMap.current,
           reprojectMap.current,
-          config
+          defaultConfig
         );
       }
     } catch (e) {
-      console.error("error in effect", { e });
+      console.error("error in mount effect", { e });
     }
-  }, [
-    threeContainer,
-    threeStereoContainer,
-    leftEye,
-    rightEye,
-    dispMap,
-    config,
-    attachAndRender,
-  ]);
+    return () => {
+      dispose?.();
+    };
+  }, []);
+
+  // Config effect — applies config changes without scene rebuild
+  React.useEffect(() => {
+    try {
+      checkConfig(config);
+      updateConfig(config);
+    } catch (e) {
+      console.error("error in config effect", { e });
+    }
+  }, [config]);
 
   const handleCalibModeToggle = () => {
     setCalibMode(toggleCalibrationMode());
@@ -109,10 +119,9 @@ const ThreeImpl = () => {
     });
   };
   const handleCalibSave = async () => {
-    await saveCalibResultsToDisk(
-      getStereoCalibrationResults(),
-      "calibResults.json"
-    );
+    const results = getStereoCalibrationResults();
+    if (!results) return;
+    await saveCalibResultsToDisk(results, "calibResults.json");
     console.log("calibration results saved");
   };
   const bindConfigChangeHandler =
@@ -157,9 +166,9 @@ const ThreeImpl = () => {
           Eye separation:
           <input
             className="mx-3 px-1"
-            step={0.01}
-            min={0.05}
-            max={2}
+            step={EYE_SEP_STEP}
+            min={EYE_SEP_MIN}
+            max={EYE_SEP_MAX}
             type="number"
             value={config.eyeSep}
             onChange={bindConfigChangeHandler("eyeSep")}
@@ -169,9 +178,9 @@ const ThreeImpl = () => {
           Stereo viewer dimensions (per eye width):
           <input
             className="mx-3 px-1"
-            min={270}
-            max={1280}
-            step={16}
+            min={STEREO_DIM_MIN}
+            max={STEREO_DIM_MAX}
+            step={STEREO_DIM_STEP}
             type="number"
             value={config.stereoWidth}
             onChange={bindConfigChangeHandler("stereoWidth")}
@@ -181,9 +190,9 @@ const ThreeImpl = () => {
           Stereo viewer dimensions (per eye height):
           <input
             className="mx-3 px-1"
-            min={270}
-            max={1280}
-            step={16}
+            min={STEREO_DIM_MIN}
+            max={STEREO_DIM_MAX}
+            step={STEREO_DIM_STEP}
             type="number"
             value={config.stereoHeight}
             onChange={bindConfigChangeHandler("stereoHeight")}

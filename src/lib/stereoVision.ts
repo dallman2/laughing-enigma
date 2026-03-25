@@ -67,7 +67,6 @@ function doStereoVis(
     captureCalibPair,
     capturedCalibPairs,
     calibResults,
-    haveCalibResults,
     stereoMatcher,
     scalarMap,
     setCaptureCalibPair,
@@ -112,7 +111,7 @@ function doStereoVis(
   }
 
   // if we have loaded in or found a mapping
-  if (haveCalibResults) {
+  if (calibResults !== null) {
     if (!stereoMatcher.stereoBM) {
       //@ts-expect-error stereoBM is a mystery
       stereoMatcher.setBM(new cv.StereoBM());

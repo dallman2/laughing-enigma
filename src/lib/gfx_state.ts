@@ -57,9 +57,7 @@ class GFXState {
   /** list of captured pairs to be used in calibration*/
   capturedCalibPairs: StereoImagePair[];
   /** an object with the results of stereo calibration */
-  calibResults: DistMapsAndQ;
-  /** do we have calibration results to show? */
-  haveCalibResults: boolean;
+  calibResults: DistMapsAndQ | null;
   /** stereo bm object */
   stereoMatcher: StereoMatcher;
   /** this class contains mats filled with scalars */
@@ -95,9 +93,7 @@ class GFXState {
     this.calibrationMode = false;
     this.captureCalibPair = false;
     this.capturedCalibPairs = [];
-    //@ts-expect-error this is really a `DistMapsAndQ` object, but we have to initialize it as null
     this.calibResults = null;
-    this.haveCalibResults = false;
     this.stereoMatcher = new StereoMatcher();
     this.scalarMap = new ScalarMatMap();
     this.raycaster = new THREE.Raycaster();
@@ -122,7 +118,7 @@ class GFXState {
    */
   resetState() {
     this.freeMats(this.capturedCalibPairs.map((pair) => pair.l).concat(this.capturedCalibPairs.map((pair) => pair.r)));
-    if (this.haveCalibResults) this.freeMats([this.calibResults.l.map1, this.calibResults.l.map2, this.calibResults.r.map1, this.calibResults.r.map2, this.calibResults.q]);
+    if (this.calibResults !== null) this.freeMats([this.calibResults.l.map1, this.calibResults.l.map2, this.calibResults.r.map1, this.calibResults.r.map2, this.calibResults.q]);
 
     this.camera = new THREE.PerspectiveCamera();
     this.stereoCam = new THREE.StereoCamera();
@@ -131,9 +127,7 @@ class GFXState {
     this.calibrationMode = false;
     this.captureCalibPair = false;
     this.capturedCalibPairs = [];
-    //@ts-expect-error this is really a `DistMapsAndQ` object, but we have to initialize it as null
     this.calibResults = null;
-    this.haveCalibResults = false;
     this.stereoMatcher = new StereoMatcher();
     this.scalarMap = new ScalarMatMap();
     this.raycaster = new THREE.Raycaster();
@@ -177,7 +171,6 @@ class GFXState {
       captureCalibPair: this.captureCalibPair,
       capturedCalibPairs: this.capturedCalibPairs,
       calibResults: this.calibResults,
-      haveCalibResults: this.haveCalibResults,
       stereoMatcher: this.stereoMatcher,
       scalarMap: this.scalarMap,
       raycaster: this.raycaster,
@@ -197,7 +190,6 @@ class GFXState {
       setCalibrationMode: (val: boolean) => (this.calibrationMode = val),
       setCaptureCalibPair: (val: boolean) => (this.captureCalibPair = val),
       setIntersectedObj: (val: THREE.Mesh<THREE.BufferGeometry, THREE.MeshLambertMaterial> | null) => (this.intersectedObj = val),
-      setHaveCalibResults: (val: boolean) => (this.haveCalibResults = val),
       setCalibResults: (val: DistMapsAndQ) => (this.calibResults = val),
       setEyeSep: (val: number) => (this.eyeSep = val),
       /** supply this with the target dims of __ONE OF__ the stereo cameras (the main viewer is 4x the size, 2x each edge dimension) */
@@ -230,4 +222,8 @@ function getAPI() {
   return (classInstance as GFXState).stateAPI();
 }
 
-export { init, getAPI };
+function getInstance(): GFXState {
+  return classInstance as GFXState;
+}
+
+export { init, getAPI, getInstance };

@@ -47,7 +47,6 @@ const App = () => {
         </List>
         <Content
           className="tab-content"
-          style={{ display: activeTab === "tab1" ? "flex" : "none" }}
           value="tab1"
         >
           <h1>Tensorflow, in the browser</h1>
@@ -55,7 +54,6 @@ const App = () => {
         </Content>
         <Content
           className="tab-content"
-          style={{ display: activeTab === "tab2" ? "flex" : "none" }}
           value="tab2"
         >
           <h1>OpenCV, in the browser</h1>
@@ -63,7 +61,6 @@ const App = () => {
         </Content>
         <Content
           className="tab-content"
-          style={{ display: activeTab === "tab3" ? "flex" : "none" }}
           value="tab3"
         >
           <EasyPicImpl />

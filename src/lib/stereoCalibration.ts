@@ -43,7 +43,6 @@ function singleImageCalib(img: Mat, r: number, c: number, prePoints: Mat, objPoi
 function doStereoCalibration() {
   console.log('calibrating');
   const {
-    setHaveCalibResults,
     capturedCalibPairs,
     setCalibResults,
     freeMats,
@@ -231,7 +230,6 @@ function doStereoCalibration() {
       q
     }
     setCalibResults(calibResults);
-    setHaveCalibResults(true);
 
     // some mats are trapped in vectors, so push all their refs into a list
     const matList = [];
