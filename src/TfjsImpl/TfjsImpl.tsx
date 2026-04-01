@@ -1,36 +1,36 @@
-import * as tf from "@tensorflow/tfjs";
+// import * as tf from "@tensorflow/tfjs";
 // import * as tfvis from "@tensorflow/tfjs-vis";
 // import * as mobilenet from "@tensorflow-models/mobilenet";
 import { useEffect, useRef, useState } from "react";
 
 import "@tensorflow/tfjs-backend-webgl";
 
-const loadModel = async (imgElement: HTMLImageElement) => {
-  const resp = await tf.setBackend("webgl");
-  console.log("tfjs backend success:", resp);
-  console.log("tf data:", {
-    version: tf.version.tfjs,
-    backend: tf.getBackend(),
-    tfENV: tf.ENV,
-  });
+const loadModel = async (_imgElement: HTMLImageElement) => {
+  // const resp = await tf.setBackend("webgl");
+  // console.log("tfjs backend success:", resp);
+  // console.log("tf data:", {
+  //   version: tf.version.tfjs,
+  //   backend: tf.getBackend(),
+  //   tfENV: tf.ENV,
+  // });
   // const loadedModel = await tf.loadLayersModel(
   //   tf.io.browserFiles(files)
   //   // "/home/dan/repos/laughing-enigma/model_dir/model.json"
   // );
-  const loadedModel = await tf.loadGraphModel(
-    "https://www.kaggle.com/models/google/mobilenet-v2/TfJs/035-224-classification/3",
-    { fromTFHub: true }
-  );
+  // const loadedModel = await tf.loadGraphModel(
+  //   "https://www.kaggle.com/models/google/mobilenet-v2/TfJs/035-224-classification/3",
+  //   { fromTFHub: true }
+  // );
   // https://stackoverflow.com/questions/52825696/tensorflowjs-error-the-shape-of-dictimages-provided-in-model-executedict
-  const example = (await tf.browser.fromPixelsAsync(imgElement))
-    .resizeNearestNeighbor([224, 224])
-    .toFloat()
-    .expandDims(0);
-  console.log("example shape", example.shape);
+  // const example = (await tf.browser.fromPixelsAsync(imgElement))
+  //   .resizeNearestNeighbor([224, 224])
+  //   .toFloat()
+  //   .expandDims(0);
+  // console.log("example shape", example.shape);
 
-  const result = loadedModel.predict(example) as tf.Tensor<tf.Rank>;
+  // const result = loadedModel.predict(example) as tf.Tensor<tf.Rank>;
 
-  console.log("result", await result.argMax().data());
+  // console.log("result", await result.argMax().data());
   // print("Top 1 prediction: ", x.argmax(),label_map[x.argmax()], x.max())
 };
 

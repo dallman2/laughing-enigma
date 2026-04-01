@@ -24,3 +24,16 @@ dist-ssr
 *.sw?
 
 *.tsbuildinfo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.venv-tf/
+*.egg-info/
+dream-server/dist/
+dream-server/build/
+
+# Converted model weights (large, hosted on CDN)
+models/

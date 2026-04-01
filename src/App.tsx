@@ -6,6 +6,7 @@ import ThreeImpl from "./ThreeImpl";
 import TfjsImpl from "./TfjsImpl";
 import { Content, List, Root, Trigger } from "@radix-ui/react-tabs";
 import EasyPicImpl from "./EasyPicImpl";
+import DreamImpl from "./DreamImpl/DreamImpl";
 import { useState } from "react";
 
 const App = () => {
@@ -44,6 +45,9 @@ const App = () => {
           <Trigger className="tab-trigger" value="tab3">
             easypic
           </Trigger>
+          <Trigger className="tab-trigger" value="tab4">
+            dream
+          </Trigger>
         </List>
         <Content
           className="tab-content"
@@ -64,6 +68,13 @@ const App = () => {
           value="tab3"
         >
           <EasyPicImpl />
+        </Content>
+        <Content
+          className="tab-content"
+          value="tab4"
+        >
+          <h1>Dream Explorer</h1>
+          <DreamImpl />
         </Content>
       </Root>
     </div>
